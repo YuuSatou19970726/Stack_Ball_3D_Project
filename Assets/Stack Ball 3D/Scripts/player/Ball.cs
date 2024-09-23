@@ -1,15 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Ball : MonoBehaviour
 {
     [Header("Elements")]
     private new Rigidbody rigidbody;
+
     [Header("Setting")]
     private bool smash, invincible;
     private int currentBrokenStacks, totalStacks;
     private float currentTime;
+
+    [Header("In Game")]
+    [SerializeField] GameObject _invincibleObj;
+    [SerializeField] Image _invincibleFill;
+    [SerializeField] GameObject _fireEffect;
 
     public enum BallState
     {
@@ -47,12 +54,6 @@ public class Ball : MonoBehaviour
             EventInvincible();
         }
 
-        if (ballState == BallState.Prepare)
-        {
-            if (Input.GetMouseButtonDown(0))
-                ballState = BallState.Playing;
-        }
-
         if (ballState == BallState.Finish)
         {
             if (Input.GetMouseButtonDown(0))
@@ -80,25 +81,42 @@ public class Ball : MonoBehaviour
     private void EventInvincible()
     {
         if (invincible)
+        {
             currentTime -= Time.deltaTime * .35f;
+            if (!_fireEffect.activeInHierarchy)
+                _fireEffect.SetActive(true);
+        }
         else
         {
+            if (_fireEffect.activeInHierarchy)
+                _fireEffect.SetActive(false);
+
             if (smash)
                 currentTime += Time.deltaTime * .8f;
             else
                 currentTime -= Time.deltaTime * .5f;
         }
 
+        if (currentTime >= 0.3f || _invincibleFill.color == Color.red)
+            _invincibleObj.SetActive(true);
+        else
+            _invincibleObj.SetActive(false);
+
         if (currentTime >= 1)
         {
             currentTime = 1;
             invincible = true;
+            _invincibleFill.color = Color.red;
         }
         else
         {
             currentTime = 0;
             invincible = false;
+            _invincibleFill.color = Color.white;
         }
+
+        if (_invincibleObj.activeInHierarchy)
+            _invincibleFill.fillAmount = currentTime / 1;
     }
     #endregion
 

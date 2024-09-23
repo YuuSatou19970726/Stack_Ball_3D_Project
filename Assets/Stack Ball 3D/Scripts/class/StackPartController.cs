@@ -46,7 +46,10 @@ public class StackPartController : MonoBehaviour
 
     public void RemoveAllChilds()
     {
-        for (int i = transform.childCount - 1; i >= 0; i--)
+        for (int i = 0; i < transform.childCount; i++)
+        {
             transform.GetChild(i).SetParent(null);
+            i--;
+        }
     }
 }
