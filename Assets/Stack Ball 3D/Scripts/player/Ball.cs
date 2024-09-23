@@ -8,6 +8,7 @@ public class Ball : MonoBehaviour
     private new Rigidbody rigidbody;
     [Header("Setting")]
     private bool smash, invincible;
+    private int currentBrokenStacks, totalStacks;
     private float currentTime;
 
     public enum BallState
@@ -17,9 +18,19 @@ public class Ball : MonoBehaviour
     [HideInInspector]
     public BallState ballState = BallState.Prepare;
 
+    [SerializeField]
+    private AudioClip _bounceOffClip, _deadClip, _winClip, _destroyClip, _iDestroyClip;
+
+    #region UnityLifecycle
     void Awake()
     {
         rigidbody = GetComponent<Rigidbody>();
+        currentBrokenStacks = 0;
+    }
+
+    void Start()
+    {
+        totalStacks = FindObjectsOfType<StackController>().Length;
     }
 
     // Update is called once per frame
@@ -63,8 +74,10 @@ public class Ball : MonoBehaviour
         if (rigidbody.velocity.y > 5)
             rigidbody.velocity = new Vector3(rigidbody.velocity.x, 5, rigidbody.velocity.z);
     }
+    #endregion
 
-    void EventInvincible()
+    #region FunctionPrivate
+    private void EventInvincible()
     {
         if (invincible)
             currentTime -= Time.deltaTime * .35f;
@@ -87,11 +100,34 @@ public class Ball : MonoBehaviour
             invincible = false;
         }
     }
+    #endregion
 
+    #region FunctionPublic
+    public void IncreaseBrokenStacks()
+    {
+        currentBrokenStacks++;
+
+        if (!invincible)
+        {
+            ScoreManager.instance.AddScore(1);
+            SoundManager.instance.PlaySoundFX(_destroyClip, 0.5f);
+        }
+        else
+        {
+            ScoreManager.instance.AddScore(2);
+            SoundManager.instance.PlaySoundFX(_iDestroyClip, 0.5f);
+        }
+    }
+    #endregion
+
+    #region EventCollision
     void OnCollisionEnter(Collision other)
     {
         if (!smash)
+        {
             rigidbody.velocity = new Vector3(0, 50 * Time.deltaTime * 5, 0);
+            SoundManager.instance.PlaySoundFX(_bounceOffClip, 0.5f);
+        }
         else
         {
             if (invincible)
@@ -105,12 +141,21 @@ public class Ball : MonoBehaviour
                     other.transform.parent.GetComponent<StackController>().ShatterAllParts();
 
                 if (other.gameObject.CompareTag(Tags.PLANE))
+                {
                     Debug.Log("Over");
+                    ScoreManager.instance.ResetScore();
+                    SoundManager.instance.PlaySoundFX(_deadClip, 0.5f);
+                }
             }
         }
 
+        FindObjectOfType<GameUI>().LevelSliderFill(currentBrokenStacks / (float)totalStacks);
+
         if (other.gameObject.CompareTag(Tags.FINISH) && ballState == BallState.Playing)
+        {
             ballState = BallState.Finish;
+            SoundManager.instance.PlaySoundFX(_winClip, 0.7f);
+        }
     }
 
     void OnCollisionStay(Collision other)
@@ -118,4 +163,6 @@ public class Ball : MonoBehaviour
         if (!smash || other.gameObject.CompareTag(Tags.FINISH))
             rigidbody.velocity = new Vector3(0, 50 * Time.deltaTime * 5, 0);
     }
+    #endregion
+
 }

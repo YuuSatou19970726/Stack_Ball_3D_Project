@@ -19,15 +19,17 @@ public class LevelSpawner : MonoBehaviour
 
     SecurePlayerPrefs securePlayerPrefs;
 
-    // Start is called before the first frame update
-    void Start()
+    #region UnityLifecycle
+    void Awake()
     {
         // PlayerPrefs.DeleteAll();
         securePlayerPrefs = new SecurePlayerPrefs(PlayerPrefsTags.KEY, PlayerPrefsTags.LEVEL);
         level = PlayerPrefs.GetInt(PlayerPrefsTags.LEVEL);
         SpawnPrefab();
     }
+    #endregion
 
+    #region FunctionPrivate
     private void SpawnPrefab()
     {
         if (level > 9)
@@ -103,13 +105,6 @@ public class LevelSpawner : MonoBehaviour
         }
     }
 
-    public void NextLevel()
-    {
-        PlayerPrefs.SetInt(PlayerPrefsTags.LEVEL, PlayerPrefs.GetInt(PlayerPrefsTags.LEVEL) + 1);
-        securePlayerPrefs.Save();
-        CheckForCheating();
-    }
-
     private void CheckForCheating()
     {
         if (securePlayerPrefs.HasBeenEdited())
@@ -123,4 +118,15 @@ public class LevelSpawner : MonoBehaviour
             SceneManager.LoadScene(0);
         }
     }
+    #endregion
+
+    #region FunctionPublic
+    public void NextLevel()
+    {
+        PlayerPrefs.SetInt(PlayerPrefsTags.LEVEL, PlayerPrefs.GetInt(PlayerPrefsTags.LEVEL) + 1);
+        securePlayerPrefs.Save();
+        CheckForCheating();
+    }
+    #endregion
+
 }

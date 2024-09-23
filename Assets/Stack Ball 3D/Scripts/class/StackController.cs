@@ -9,7 +9,10 @@ public class StackController : MonoBehaviour
     public void ShatterAllParts()
     {
         if (transform.parent != null)
+        {
             transform.parent = null;
+            FindObjectOfType<Ball>().IncreaseBrokenStacks();
+        }
 
         foreach (StackPartController stackPart in stackPartControllers)
             stackPart.Shatter();
