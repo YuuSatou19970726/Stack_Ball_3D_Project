@@ -17,15 +17,33 @@ public class LevelSpawner : MonoBehaviour
     public int level = 1, addOn = 7;
     private float i = 0;
 
+    [SerializeField] private Material _plateMat, _baseMat;
+    [SerializeField] MeshRenderer _ballMesh;
+
     SecurePlayerPrefs securePlayerPrefs;
 
     #region UnityLifecycle
     void Awake()
     {
+        // Random.ColorHSV: generate a random color based on specified HSV (Hue, Saturation, Value) and alpha ranges.
+        _plateMat.color = Random.ColorHSV(0, 1, 0.5f, 1, 1, 1);
+        _baseMat.color = _plateMat.color + Color.gray;
+        _ballMesh.material.color = _plateMat.color;
+
         // PlayerPrefs.DeleteAll();
         securePlayerPrefs = new SecurePlayerPrefs(PlayerPrefsTags.KEY, PlayerPrefsTags.LEVEL);
         level = PlayerPrefs.GetInt(PlayerPrefsTags.LEVEL);
         SpawnPrefab();
+    }
+
+    void Update()
+    {
+        if (Input.GetMouseButtonDown(1))
+        {
+            _plateMat.color = Random.ColorHSV(0, 1, 0.5f, 1, 1, 1);
+            _baseMat.color = _plateMat.color + Color.gray;
+            _ballMesh.material.color = _plateMat.color;
+        }
     }
     #endregion
 

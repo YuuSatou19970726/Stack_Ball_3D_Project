@@ -16,7 +16,7 @@ public class Ball : MonoBehaviour
     [Header("In Game")]
     [SerializeField] GameObject _invincibleObj;
     [SerializeField] Image _invincibleFill;
-    [SerializeField] GameObject _fireEffect;
+    [SerializeField] GameObject _fireEffect, _winEffect, _splashEffect;
 
     public enum BallState
     {
@@ -102,21 +102,19 @@ public class Ball : MonoBehaviour
         else
             _invincibleObj.SetActive(false);
 
-        if (currentTime >= 1)
+        if (currentTime >= 1f)
         {
-            currentTime = 1;
             invincible = true;
             _invincibleFill.color = Color.red;
         }
         else
         {
-            currentTime = 0;
             invincible = false;
             _invincibleFill.color = Color.white;
         }
 
         if (_invincibleObj.activeInHierarchy)
-            _invincibleFill.fillAmount = currentTime / 1;
+            _invincibleFill.fillAmount = currentTime / 1f;
     }
     #endregion
 
@@ -144,6 +142,21 @@ public class Ball : MonoBehaviour
         if (!smash)
         {
             rigidbody.velocity = new Vector3(0, 50 * Time.deltaTime * 5, 0);
+
+            if (!other.gameObject.CompareTag(Tags.FINISH))
+            {
+                // transform.localEulerAngles: represents the rotation of a GameObject as Euler angles in degrees relative to its parent transform’s rotation.
+                GameObject splash = Instantiate(_splashEffect);
+                splash.transform.SetParent(other.transform);
+                splash.transform.localEulerAngles = new Vector3(90, Random.Range(0, 359), 0);
+
+                // transform.localScale: sets the scale of a GameObject relative to its parent.
+                float randomScale = Random.Range(0.18f, 0.25f);
+                splash.transform.localScale = new Vector3(randomScale, randomScale, 1);
+                splash.transform.position = new Vector3(transform.position.x, transform.position.y - 0.22f, transform.position.z);
+                splash.GetComponent<SpriteRenderer>().color = transform.GetChild(0).GetComponent<MeshRenderer>().material.color;
+            }
+
             SoundManager.instance.PlaySoundFX(_bounceOffClip, 0.5f);
         }
         else
@@ -160,8 +173,9 @@ public class Ball : MonoBehaviour
 
                 if (other.gameObject.CompareTag(Tags.PLANE))
                 {
-                    Debug.Log("Over");
-                    ScoreManager.instance.ResetScore();
+                    rigidbody.isKinematic = true;
+                    transform.GetChild(0).gameObject.SetActive(false);
+                    ballState = BallState.Died;
                     SoundManager.instance.PlaySoundFX(_deadClip, 0.5f);
                 }
             }
@@ -173,6 +187,11 @@ public class Ball : MonoBehaviour
         {
             ballState = BallState.Finish;
             SoundManager.instance.PlaySoundFX(_winClip, 0.7f);
+            GameObject win = Instantiate(_winEffect);
+            win.transform.SetParent(Camera.main.transform);
+            win.transform.localPosition = Vector3.up * 1.5f;
+            // represents the rotation of a GameObject in world space using Euler angles (in degrees) around the X, Y, and Z axes.
+            win.transform.eulerAngles = Vector3.zero;
         }
     }
 
